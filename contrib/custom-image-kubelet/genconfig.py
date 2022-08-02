@@ -71,7 +71,7 @@ def get_release(release_url):
 def get_image_artifact(release, component):
     for c in release.get('status', {}).get('components', []):
         for a in c.get('assets', []):
-            if a['name'] == component + '-image':
+            if a['name'] == f'{component}-image':
                 return a['image']['uri']
 
     raise Exception(f'Unable to find image asset for {component}')
@@ -89,7 +89,7 @@ def write_rke2_config(config, prefix):
         config_file.seek(0, 0)
         config_yaml = load(config_file, Loader=Loader)
         if not config_yaml:
-            config_yaml = dict()
+            config_yaml = {}
         config_yaml.update(config)
         logging.info(f'Writing config to {config_file.name}')
         config_file.seek(0, 0)
@@ -162,13 +162,12 @@ def write_ecr_credentials(release, prefix):
     etc_dir = f'{prefix}/etc/rancher/rke2'
     registries = get_ecr_registries(release)
 
-    registry_configs = dict()
+    registry_configs = {}
     registry_regions = defaultdict(list)
 
     for registry in registries:
-        match = re.match(ECR_REGEX, registry)
-        if match:
-            registry_regions[match.group('region')].append(match.group('registry'))
+        if match := re.match(ECR_REGEX, registry):
+            registry_regions[match['region']].append(match['registry'])
 
     if not registry_regions:
         return
@@ -190,9 +189,9 @@ def write_ecr_credentials(release, prefix):
         registries_file.seek(0, 0)
         registries_yaml = load(registries_file, Loader=Loader)
         if not registries_yaml:
-            registries_yaml = dict()
+            registries_yaml = {}
         if 'configs' not in registries_yaml:
-            registries_yaml['configs'] = dict()
+            registries_yaml['configs'] = {}
         registries_yaml['configs'].update(registry_configs)
         logging.info(f'Writing credentials to {registries_file.name}')
         registries_file.seek(0, 0)
